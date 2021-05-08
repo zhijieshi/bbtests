@@ -18,8 +18,8 @@ What is 2<sup>1</sup>&middot;&pi;? π works, too.
 
 HTML code can be placed in Questions, including SVG pictures.
 
-## Escaping `'`
+## Escaping `[`
 
-Only FIB\_PLUS questions require `[` to be escaped.
-
+Only FIB\_PLUS questions require `[` be escaped, like `\[`. Othewise, 
+it indicates a blank. 
 
