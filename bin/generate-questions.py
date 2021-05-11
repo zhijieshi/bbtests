@@ -3,28 +3,31 @@ import sys, argparse, csv
 from string import Template
 
 # parse the arguments
-# more examples at https://pymotw.com/2/argparse/
-parser = argparse.ArgumentParser(description='Python Example')
+parser = argparse.ArgumentParser(description='Generate questions from a template.')
 parser.add_argument('templatefile', help='template file')
 parser.add_argument('csvfile', help='csv file')
-# example: -o a.txt
-parser.add_argument("-o", "--output", help="File to be updated")
-# boolean option, short only
+# parser.add_argument("--output", "-o", help="output filename")
+parser.add_argument("--encoding", default="utf-8", 
+        choices=["utf-8", "utf-8-sig", "utf-16"],
+        help="the encoding of input files.")
 parser.add_argument("-v", action='store_true', default=False) 
 
 args = parser.parse_args()
 
-print(args)
+if args.v:
+    print(args)
 
 tmpl_str = ''
 
-with open(args.templatefile, 'r', encoding='utf-8') as f:
+with open(args.templatefile, 'r', encoding=args.encoding) as f:
     tmpl_str = f.read()
 
-print(tmpl_str)
+if args.v:
+    print(tmpl_str)
+
 tmpl = Template(tmpl_str)
 
-with open(args.csvfile, 'r', encoding='utf-8') as f:
+with open(args.csvfile, 'r', encoding=args.encoding, newline='') as f:
     reader = csv.DictReader(f)
     for row in reader:
         q = tmpl.safe_substitute(row)

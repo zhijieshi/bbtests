@@ -3,6 +3,7 @@ import sys, argparse, csv
 from string import Template
 from enum import Enum, auto
 import re
+import fileinput
 
 # wrapper 
 class FileWrapper:
@@ -231,8 +232,11 @@ def     load_question(q, file, has_answer):
 
 # parse the arguments
 parser = argparse.ArgumentParser(description='Python Example')
-parser.add_argument('inputfile', help='input file')
-parser.add_argument("--output", "-o", help="File to be updated")
+parser.add_argument('inputfile', nargs='+', help='Input files')
+parser.add_argument("--output", "-o", help="Output file")
+parser.add_argument("--encoding", default="utf-8", 
+        choices=["utf-8", "utf-8-sig", "utf-16"],
+        help="Input file encoding")
 parser.add_argument("-v", action='store_true', default=False) 
 
 args = parser.parse_args()
@@ -242,7 +246,10 @@ if (args.v):
 
 questions = []
 
-with open(args.inputfile, 'r', encoding='utf-8') as f:
+# with open(args.inputfile, 'r', encoding='utf-8') as f:
+with fileinput.FileInput(files=args.inputfile, 
+        mode='r', 
+        openhook=fileinput.hook_encoded(args.encoding)) as f:
     fw = FileWrapper(f) 
     qtype = QType.MC
     while True: 
@@ -284,6 +291,7 @@ if not args.output:
         print(q.get_description())
         print(q.get_answer_list())
 else:
+    # the default encoding is utf-8
     with open(args.output, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter='\t', quotechar='', quoting=csv.QUOTE_NONE)
         for q in questions:
