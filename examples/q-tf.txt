@@ -8,7 +8,9 @@ b. False
 Type: TF
 1. The following Python code swaps variables a and b. 
 
-<pre>a, b = b, a</pre>
+<pre>
+a, b = b, a
+</pre>
 
 *a. True
 b. False
