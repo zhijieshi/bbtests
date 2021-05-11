@@ -1,0 +1,23 @@
+Type: FMB
+Title: Multiple blanks
+1. Write a RISC-V instruction to set <code>x1</code> to 14. 
+
+<pre>
+[addi]    x1, x0, [14]
+add       x1, x1, x1 
+</pre>
+
+Type: FMB
+Title: Multiple blanks
+1. After the following C statements, a's value is [11], b's value is [101],
+and c[0]'s value is [110].
+
+Note that here c[0] is not a blank to fill because the left bracket is not
+after a space. We can also manually escape the bracket, like \[example].
+
+<pre>
+int    a = 10;
+int    b = 100;
+int    c[2];
+c[0] = a ++ + b ++;
+</pre>

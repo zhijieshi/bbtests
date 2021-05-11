@@ -1,0 +1,6 @@
+Type: F
+Points: 1
+Title: dec2bin
+1. Convert the decimal number $dec into an 8-bit 2's complement number.
+
+a. $bin

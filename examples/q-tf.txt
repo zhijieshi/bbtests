@@ -1,0 +1,20 @@
+Type: TF
+1. If the radius of a circle is r, the area of the circle is
+&pi;r<sup>2</sup>. 
+
+*a. True
+b. False
+
+Type: TF
+1. The following Python code swaps variables a and b. 
+
+<pre>a, b = b, a</pre>
+
+*a. True
+b. False
+
+Type: TF
+1. If x<sup>2</sup> = 4, then x = 2.
+
+a. True
+*b. False

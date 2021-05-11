@@ -1,0 +1,19 @@
+Type: MC
+1. Which of the following is the best approximation of &pi;?
+
+a. 3
+b. 3.1
+*c. 3.14
+d. 3.2
+
+
+Type: MC
+1. If the radius of a circle is 2 cm, what is the area of
+the circle in cm<sup>2</sup>?
+<br /><svg width="100" height="100"> <circle cx="50" cy="50" r="40" 
+stroke="green" stroke-width="4" fill="blue"/> </svg>
+
+a. &pi;
+b. 2&pi;
+c. 3&pi;
+*d. 4&pi;
