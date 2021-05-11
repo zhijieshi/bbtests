@@ -1,0 +1,13 @@
+Type: TF
+1. If a, b, and c are the lengths of three sides of a right triangle and c 
+is the length of the hypotenuse, the following equation is true. 
+
+\[ a^2 + b^2 = c^2 \] 
+
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+*a. True
+b. False
+

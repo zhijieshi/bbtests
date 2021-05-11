@@ -129,7 +129,13 @@ addi  x1, x0, 0    // RISC-V instructions
 
 ### Math
 
-Math equations are not supported. We can use Unicode or HTML code to write
-simple equations. We can also convert math equations to SVG figures.  
+Blackboard does not support math equations well. There are a few ways to 
+include math equations.  
 
-We may be able to use MathML if more browsers support it.
+* Use Unicode or HTML code to write simple equations
+
+* Use MathJax. See the example in [`q-math.txt`](examples/q-math.txt)
+
+* Convert math equations to SVG figures
+
+* Use MathML, although it is only supported in Firefox
