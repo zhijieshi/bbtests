@@ -15,9 +15,9 @@ and c[0]'s value is [110].
 Note that here c[0] is not a blank to fill because the left bracket is not
 after a space. We can also manually escape the bracket, like \[example].
 
-<pre>
+```
 int    a = 10;
 int    b = 100;
 int    c[2];
 c[0] = a ++ + b ++;
-</pre>
+```
