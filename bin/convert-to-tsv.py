@@ -247,42 +247,46 @@ if (args.v):
 questions = []
 
 # with open(args.inputfile, 'r', encoding='utf-8') as f:
-with fileinput.FileInput(files=args.inputfile, 
-        mode='r', 
-        openhook=fileinput.hook_encoded(args.encoding)) as f:
-    fw = FileWrapper(f) 
-    qtype = QType.MC
-    while True: 
-        line = fw.readline()
-        # print(line)
-        if not line:
-            break
-        if m := re.match(r"Type:\s*(F|FIB|MC|FIB_PLUS|FMB|E|ESS)$", line):
-            qtype = Str2QType[m.group(1)]
-            if args.v: print("Question type:", t.name)
-        elif m := re.match(r"(\d+)\.\s+(.+)", line): 
-            fw.unreadline(line)
-            if qtype == QType.FIB:
-                q = FIBQuestion() 
-                load_question(q, fw, True)
-            elif qtype == QType.MC:
-                q = MCQuestion() 
-                load_question(q, fw, True)
-            elif qtype == QType.TF:
-                q = TFQuestion() 
-                load_question(q, fw, True)
-            elif qtype == QType.FIB_PLUS:
-                q = FMBQuestion() 
-                load_question(q, fw, False)
-                q.find_answers()
+try:
+    with fileinput.FileInput(files=args.inputfile, 
+            mode='r', 
+            openhook=fileinput.hook_encoded(args.encoding)) as f:
+        fw = FileWrapper(f) 
+        qtype = QType.MC
+        while True: 
+            line = fw.readline()
+            # print(line)
+            if not line:
+                break
+            if m := re.match(r"Type:\s*(F|FIB|MC|FIB_PLUS|FMB|E|ESS)$", line):
+                qtype = Str2QType[m.group(1)]
+                if args.v: print("Question type:", t.name)
+            elif m := re.match(r"(\d+)\.\s+(.+)", line): 
+                fw.unreadline(line)
+                if qtype == QType.FIB:
+                    q = FIBQuestion() 
+                    load_question(q, fw, True)
+                elif qtype == QType.MC:
+                    q = MCQuestion() 
+                    load_question(q, fw, True)
+                elif qtype == QType.TF:
+                    q = TFQuestion() 
+                    load_question(q, fw, True)
+                elif qtype == QType.FIB_PLUS:
+                    q = FMBQuestion() 
+                    load_question(q, fw, False)
+                    q.find_answers()
+                else:
+                    raise ValueError("Unsupported type." + t)
+                questions.append(q)
+                qtype = QType.MC
+            elif is_new_question(line):
+                pass
             else:
-                raise ValueError("Unsupported type." + t)
-            questions.append(q)
-            qtype = QType.MC
-        elif is_new_question(line):
-            pass
-        else:
-            if args.v: print("skipped:", line)
+                if args.v: print("skipped:", line)
+except FileNotFoundError as e:
+    print(e)
+    exit(1)
 
 if not args.output:
     for q in questions:
