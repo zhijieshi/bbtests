@@ -170,7 +170,9 @@ class   FMBQuestion(Question):
             if counter > 1:
                 self.add_answer('')
             self.add_answer(varname)
-            [self.add_answer(x.strip()) for x in m.group(2).split(',')]
+            # temporarily disable multiple answers, as we need ',' in answers
+            # [self.add_answer(x.strip()) for x in m.group(2).split(',')]
+            self.add_answer(m.group(2))
             return f'{m.group(1)}[{varname}]'
 
         def escape_bracket(m):
@@ -185,10 +187,13 @@ class   FMBQuestion(Question):
         # a blank must be on one line
         # a line can have multiple blanks
         for index, line in enumerate(self.description):
-            # find variable
+            # find variables
+            # a variable must be after a space or at the beginning of a line
             tmp = re.sub(r'(^| )\[([^]]+)]', process_answer, line)
+            # escape empty brackets " []" 
+            tmp = re.sub(r'(^| )\[]', r'\1\\[]', tmp)
             # escape other '['
-            self.description[index] = re.sub(r'(\S)(\[[^]]+])', escape_bracket, tmp)
+            self.description[index] = re.sub(r'(\S)(\[)', escape_bracket, tmp)
 
     def add_answer(self, answer):
         self.answers.append(answer)
@@ -258,7 +263,7 @@ try:
             # print(line)
             if not line:
                 break
-            if m := re.match(r"Type:\s*(F|FIB|MC|FIB_PLUS|FMB|E|ESS)$", line):
+            if m := re.match(r"Type:\s*(F|FIB|MC|FIB_PLUS|FMB|E|ESS)\s*$", line):
                 qtype = Str2QType[m.group(1)]
                 if args.v: print("Question type:", t.name)
             elif m := re.match(r"(\d+)\.\s+(.+)", line): 
