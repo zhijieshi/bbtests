@@ -4,6 +4,7 @@ from string import Template
 from enum import Enum, auto
 import re
 import fileinput
+import logging
 
 # wrapper 
 class FileWrapper:
@@ -13,9 +14,14 @@ class FileWrapper:
         
     def readline(self):
         if self.buffer is None:
-            return self.file.readline()
-        rv = self.buffer
-        self.buffer = None
+            rv = self.file.readline()
+            if rv == '':
+                logging.debug("End of file")
+                return None
+            rv = rv.strip()
+        else:
+            rv = self.buffer
+            self.buffer = None
         return rv 
         
     def unreadline(self, line):
@@ -25,7 +31,7 @@ class FileWrapper:
 class   LineState(Enum):
     EMPTY = auto()
     PARA = auto()
-    PRE = auto()
+    CODE = auto()
 
 class   QType(Enum):
     MC = auto()
@@ -34,6 +40,7 @@ class   QType(Enum):
     FIB_PLUS = auto()
     ESS = auto()
     NUM = auto()
+    F = FIB
 
 Str2QType = {
         "MC" :  QType.MC,
@@ -59,8 +66,9 @@ def     get_answer(line):
     assert m is not None
     return (m.group(2), m.group(1) == '*') 
 
+# this function detects if the line might be a start of a new question  
 def     is_new_question(line):
-    m = re.match(r'(Type: |Points: |Title: |\d+\. )', line)
+    m = re.match(r'(Type:|Points:|Title:|\d+\.) ', line)
     return m is not None
 
 # classes for questions
@@ -70,9 +78,16 @@ class   Question:
         self.type = t
         self.description = []
         self.answers = []
+        self.linebreak = '<br />'
+        self.para_start = "<p>"
+        self.para_end = "</p>"
+        self.code_start = '<pre class="language-python">'
+        self.code_end = "</pre>"
         pass
 
     def add_description(self, d):
+        # simply append the line to self.description 
+        # will clean up later when get_description() is called
         self.description.append(d)
 
     def add_answer(self, a):
@@ -88,34 +103,37 @@ class   Question:
     def get_description(self):
         d = ''
         state = LineState.EMPTY
-        LINEBREAK = '<br />'
         for line in self.description :
             if state == LineState.PARA:
-                stripped = line.strip()
-                if not stripped:
-                    d += LINEBREAK
+                if not line:
+                    d += self.para_end
                     state = LineState.EMPTY
-                elif stripped in ("<pre>", "```"): 
-                    d += LINEBREAK + '<pre>'
-                    state = LineState.PRE
+                elif line in ("<pre>", "```"): 
+                    d += self.para_end + self.code_start
+                    state = LineState.CODE
                 else:
-                    d += ' ' + stripped
+                    d += ' ' + line
             elif state == LineState.EMPTY:
-                stripped = line.strip()
-                if not stripped:
-                    pass    # Only one LINEBREAK for consecutive empty lines
-                elif stripped in ("<pre>", "```"): 
-                    d += LINEBREAK + '<pre>'
-                    state = LineState.PRE
-                else:
-                    d += stripped
+                if line in ("<pre>", "```"): 
+                    d += self.code_start
+                    state = LineState.CODE
+                elif line:
+                    # TODO: support other HTML code?
+                    d += self.para_start + line
                     state = LineState.PARA
-            else: # in pre tags
-                stripped = line.rstrip()
-                if stripped in ("</pre>", "```"): 
-                    stripped = '</pre>'
+                else:
+                    d += self.para_start + self.para_end
+            else: # in code
+                if line in ("</pre>", "```"): 
+                    d += self.code_end
                     state = LineState.EMPTY
-                d += stripped + LINEBREAK
+                else:
+                    d += line + self.linebreak
+        if state == LineState.CODE:
+            logging.error("Code block did not end.")
+            exit(2)
+        elif state == LineState.PARA:
+            d += self.para_end
         return d
 
 # Multiple-choice 
@@ -203,34 +221,39 @@ class   FMBQuestion(Question):
 
 def     load_description(q, file, has_answer):
     line = file.readline()
-    # remove question number
     q.add_description(line)
     empty_line = False
     while True:
         line = file.readline()
-        if not line:
+
+        if line is None: # end of file
             return
-        if empty_line:
+
+        # if the last line is empty, check if this line 
+        # starts the answers or starts a new questin
+        if empty_line:  
             # look ahead
-            if has_answer and is_answer(line):
+            if (has_answer and is_answer(line)
+                or not has_answer and is_new_question(line)):
                 file.unreadline(line)
                 return
-            elif is_new_question(line):
-                file.unreadline(line)
-                return
+
         empty_line = is_empty(line)
         q.add_description(line)
 
 def     load_answers(q, file):
+
     while True:
         line = file.readline()
-        if is_answer(line):
+        if line is None:
+            return
+        elif is_answer(line):
             q.add_answer(line)
-        else:
+        elif not is_empty(line):
             file.unreadline(line)
             return
 
-def     load_question(q, file, has_answer):
+def     load_question(q, file, has_answer = True):
     load_description(q, file, has_answer)
     if has_answer:
         load_answers(q, file)
@@ -249,34 +272,41 @@ args = parser.parse_args()
 if (args.v):
     print(args)
 
+
+logging.basicConfig(level=logging.INFO)
+
 questions = []
 
+qtype = QType.MC
 # with open(args.inputfile, 'r', encoding='utf-8') as f:
 try:
     with fileinput.FileInput(files=args.inputfile, 
             mode='r', 
             openhook=fileinput.hook_encoded(args.encoding)) as f:
         fw = FileWrapper(f) 
-        qtype = QType.MC
         while True: 
             line = fw.readline()
-            # print(line)
-            if not line:
+            if line is None:
                 break
+<<<<<<< HEAD
             if m := re.match(r"Type:\s*(F|FIB|MC|FIB_PLUS|FMB|E|ESS)\s*$", line):
+=======
+            logging.debug(f"'{line}'")
+            if m := re.match(r"Type:\s*(F|FIB|NUM|MC|FIB_PLUS|FMB|E|ESS)\s*$", line):
+>>>>>>> 376be489d260f33789a8aa9b0cd1b7206737d4f8
                 qtype = Str2QType[m.group(1)]
-                if args.v: print("Question type:", t.name)
+                logging.debug(f"Question type:{m.group(1)}")
             elif m := re.match(r"(\d+)\.\s+(.+)", line): 
                 fw.unreadline(line)
-                if qtype == QType.FIB:
+                if qtype in [QType.FIB, QType.F, QType.NUM]:
                     q = FIBQuestion() 
-                    load_question(q, fw, True)
+                    load_question(q, fw)
                 elif qtype == QType.MC:
                     q = MCQuestion() 
-                    load_question(q, fw, True)
+                    load_question(q, fw)
                 elif qtype == QType.TF:
                     q = TFQuestion() 
-                    load_question(q, fw, True)
+                    load_question(q, fw)
                 elif qtype == QType.FIB_PLUS:
                     q = FMBQuestion() 
                     load_question(q, fw, False)
@@ -284,11 +314,14 @@ try:
                 else:
                     raise ValueError("Unsupported type." + t)
                 questions.append(q)
-                qtype = QType.MC
+                logging.debug(f"End of a question.")
             elif is_new_question(line):
+                # these are additonal features that are not supported
+                pass
+            elif is_empty(line):
                 pass
             else:
-                if args.v: print("skipped:", line)
+                logging.error(f"Unknown lines: {line}")
 except FileNotFoundError as e:
     print(e)
     exit(1)
