@@ -11,6 +11,7 @@ class FileWrapper:
     def __init__(self, file):
         self.file = file
         self.buffer = None
+        self.lineno = 0
         
     def readline(self):
         if self.buffer is None:
@@ -18,6 +19,10 @@ class FileWrapper:
             if rv == '':
                 logging.debug("End of file")
                 return None
+            self.lineno += 1
+            if '\t' in rv:
+                logging.error(f"Line {self.lineno} has TAB characters.")
+                exit(1)
             rv = rv.strip()
         else:
             rv = self.buffer
@@ -164,8 +169,8 @@ class   TFQuestion(Question):
 # Fill-in-the-blank
 class   FIBQuestion(Question):
 
-    def __init__(self):
-        super().__init__(QType.FIB)
+    def __init__(self, qtype=QType.FIB):
+        super().__init__(qtype)
 
     def get_answer_list(self):
         return [ a for (a, c) in self.answers]
@@ -288,18 +293,14 @@ try:
             line = fw.readline()
             if line is None:
                 break
-<<<<<<< HEAD
-            if m := re.match(r"Type:\s*(F|FIB|MC|FIB_PLUS|FMB|E|ESS)\s*$", line):
-=======
             logging.debug(f"'{line}'")
             if m := re.match(r"Type:\s*(F|FIB|NUM|MC|FIB_PLUS|FMB|E|ESS)\s*$", line):
->>>>>>> 376be489d260f33789a8aa9b0cd1b7206737d4f8
                 qtype = Str2QType[m.group(1)]
                 logging.debug(f"Question type:{m.group(1)}")
             elif m := re.match(r"(\d+)\.\s+(.+)", line): 
                 fw.unreadline(line)
                 if qtype in [QType.FIB, QType.F, QType.NUM]:
-                    q = FIBQuestion() 
+                    q = FIBQuestion(qtype) 
                     load_question(q, fw)
                 elif qtype == QType.MC:
                     q = MCQuestion() 
