@@ -36,7 +36,8 @@ class FileWrapper:
 class   LineState(Enum):
     EMPTY = auto()
     PARA = auto()
-    CODE = auto()
+    PRE_CODE = auto()
+    # CODE = auto()
 
 class   QType(Enum):
     MC = auto()
@@ -76,6 +77,13 @@ def     is_new_question(line):
     m = re.match(r'(Type:|Points:|Title:|\d+\.) ', line)
     return m is not None
 
+def     fenced_code_starts(line):
+    return line == '```'
+
+def     fenced_code_ends(line, start):
+    return line == '```'
+
+
 # classes for questions
 class   Question:
 
@@ -83,11 +91,14 @@ class   Question:
         self.type = t
         self.description = []
         self.answers = []
-        self.linebreak = '<br />'
+        self.linebreak = '<br>'
         self.para_start = "<p>"
         self.para_end = "</p>"
-        self.code_start = '<pre class="language-python">'
-        self.code_end = "</pre>"
+        self.pre_start = '<pre class="language-python">'
+        self.pre_end = "</pre>"
+        self.code_start = '<code class="token keyword">'
+        self.code_end = "</code>"
+        self.fenced_code_str = ""
         pass
 
     def add_description(self, d):
@@ -105,6 +116,9 @@ class   Question:
         while is_empty(self.description[-1]):
             self.description.pop()
 
+    def     process_inline_code(self, line):
+        return re.sub(r'`([^`]+)`', f'{self.code_start}\\1{self.code_end}', line)
+
     def get_description(self):
         d = ''
         state = LineState.EMPTY
@@ -113,28 +127,30 @@ class   Question:
                 if not line:
                     d += self.para_end
                     state = LineState.EMPTY
-                elif line in ("<pre>", "```"): 
-                    d += self.para_end + self.code_start
-                    state = LineState.CODE
+                elif fenced_code_starts(line):
+                    d += self.para_end + self.pre_start
+                    state = LineState.PRE_CODE
+                    self.fenced_code_str = line
                 else:
-                    d += ' ' + line
+                    d += ' ' + self.process_inline_code(line)
             elif state == LineState.EMPTY:
-                if line in ("<pre>", "```"): 
-                    d += self.code_start
-                    state = LineState.CODE
+                if fenced_code_starts(line):
+                    d += self.pre_start
+                    state = LineState.PRE_CODE
+                    self.fenced_code_str = line
                 elif line:
                     # TODO: support other HTML code?
-                    d += self.para_start + line
+                    d += self.para_start + self.process_inline_code(line)
                     state = LineState.PARA
                 else:
                     d += self.para_start + self.para_end
             else: # in code
-                if line in ("</pre>", "```"): 
-                    d += self.code_end
+                if fenced_code_ends(line, self.fenced_code_str):
+                    d += self.pre_end
                     state = LineState.EMPTY
                 else:
                     d += line + self.linebreak
-        if state == LineState.CODE:
+        if state == LineState.PRE_CODE:
             logging.error("Code block did not end.")
             exit(2)
         elif state == LineState.PARA:
