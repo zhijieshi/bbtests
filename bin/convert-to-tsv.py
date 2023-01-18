@@ -352,7 +352,7 @@ if not args.output:
 else:
     # the default encoding is utf-8
     with open(args.output, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter='\t', quoting=csv.QUOTE_NONE)
+        csvwriter = csv.writer(csvfile, delimiter='\t', quotechar='\\', quoting=csv.QUOTE_NONE)
         for q in questions:
             q.cleanup_description()
             fields = [q.type.name, q.get_description()]
